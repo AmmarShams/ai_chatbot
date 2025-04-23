@@ -4,9 +4,9 @@
 
 An AI-powered assistant that helps users discover smartphone products and notifies them when out-of-stock items become available again. Built with React for the frontend, n8n for backend workflows, Supabase for data storage, and SerpAPI for product data.
 
-## 🔗 Live Demo
+**🚀 Fully functional and deployed live on Netlify!** Check it out: [https://smartphoneaichatbot.netlify.app/](https://smartphoneaichatbot.netlify.app/)
 
-You can see a live demo of the Smart Product Bot at: [https://smartphoneaichatbot.netlify.app/](https://smartphoneaichatbot.netlify.app/)
+An AI-powered assistant that helps users discover smartphone products and notifies them when out-of-stock items become available again. Built with React for the frontend, n8n for backend workflows, Supabase for data storage, and SerpAPI for product data.
 
 
 ## ✨ Features

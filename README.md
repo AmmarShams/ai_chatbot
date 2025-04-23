@@ -6,7 +6,7 @@ An AI-powered assistant that helps users discover smartphone products and notifi
 
 ## 🔗 Live Demo
 
-You can see a live demo of the Smart Product Bot at: [https://your-netlify-url.com](https://your-netlify-url.com)
+You can see a live demo of the Smart Product Bot at: [https://smartphoneaichatbot.netlify.app/](https://smartphoneaichatbot.netlify.app/)
 
 
 ## ✨ Features

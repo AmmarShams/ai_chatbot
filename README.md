@@ -4,6 +4,11 @@
 
 An AI-powered assistant that helps users discover smartphone products and notifies them when out-of-stock items become available again. Built with React for the frontend, n8n for backend workflows, Supabase for data storage, and SerpAPI for product data.
 
+## 🔗 Live Demo
+
+You can see a live demo of the Smart Product Bot at: [https://your-netlify-url.com](https://your-netlify-url.com)
+
+
 ## ✨ Features
 
 * **🔍 Smart Product Search:** Ask the AI chatbot about smartphones and get relevant information.
@@ -100,7 +105,3 @@ Here are some example queries you can try with the AI chatbot:
 * "Compare the specifications of the Samsung Galaxy S21 and OnePlus 9."
 * "Is the iPhone 13 currently available?"
 * "Can you find me an iPhone priced under $1000?"
-
-## 🔗 Live Demo
-
-You can see a live demo of the Smart Product Bot at: [https://your-netlify-url.com](https://your-netlify-url.com)

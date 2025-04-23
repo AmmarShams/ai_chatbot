@@ -5,10 +5,12 @@
 [![Supabase](https://img.shields.io/badge/Supabase-%233ECF8E.svg?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
 [![SerpAPI](https://img.shields.io/badge/SerpAPI-%23FF6F00.svg?style=for-the-badge&logoColor=white)](https://serpapi.com/)
 [![Netlify](https://img.shields.io/badge/Netlify-%2300C7B7.svg?style=for-the-badge&logo=netlify&logoColor=white)](https://www.netlify.com/)
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Online-%2300C7B7?style=for-the-badge&logo=vercel&logoColor=white)](https://smartphoneaichatbot.netlify.app/)
 
-**A fully functional AI-powered assistant, deployed with Netlify, designed to help users discover smartphone products and receive timely notifications when out-of-stock items are available again.**
+**🚀 Fully functional and deployed live on Netlify!**
 
+**Check out the live demo:** [https://smartphoneaichatbot.netlify.app/](https://smartphoneaichatbot.netlify.app/)
+
+An AI-powered assistant designed to help users discover smartphone products and receive timely notifications when out-of-stock items are available again. Built with React for the frontend, n8n for backend workflows, Supabase for data storage, and SerpAPI for product data.
 ## ✨ Key Features
 
 * **Intelligent Product Discovery:** Engage with an AI chatbot to find detailed information about smartphones.

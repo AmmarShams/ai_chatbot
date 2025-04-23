@@ -1,0 +1,129 @@
+body{
+    margin: 0 auto;
+    font-family: 'IBM Plex Sans', sans-serif !important; 
+
+}
+.app-logo {
+  width: 50px; /* Adjust as needed */
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  padding-top: 20px;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+
+#title{
+  margin: 0 auto;
+  text-align: center;
+  text-decoration: none;
+}
+.gradient-blob-1, .gradient-blob-2 {
+    position: absolute;
+    bottom: 0;
+    width: 70vw;
+    height: 60vh;
+    border-radius: 70%;
+    filter: blur(80px);
+    z-index: -1;
+  }
+  
+  .gradient-blob-1 {
+    left: 15vw;
+    background: radial-gradient(circle, #FF86E1 0%, transparent 70%);
+  }
+  
+  .gradient-blob-2 {
+    left: 25vw;
+    background: radial-gradient(circle, #89BCFF 0%, transparent 70%);
+  }
+  
+  .arrow-btn {
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+.form-intro {
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #444;
+    margin-bottom: 20px;
+    margin-left: 70px; /* Adjust this value to nudge it */
+    margin-top: 2rem;
+  }
+  
+  .response-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin: 2rem auto;
+    max-width: 1000px;
+    padding: 0 2rem;
+    margin-bottom: 6rem; /* Space for prompt at bottom */
+  }
+  
+  .message {
+    padding: 1rem 1.5rem;
+    border-radius: 20px;
+    max-width: 60%;
+    word-wrap: break-word;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    font-size: 1rem;
+  }
+  
+  .user-message {
+    background-color: #e0f7fa;
+    align-self: flex-start;
+    border-top-left-radius: 0;
+  }
+  
+  .ai-message {
+    background-color: #d1c4e9;
+    align-self: flex-end;
+    border-top-right-radius: 0;
+   
+  }
+  
+
+  
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message {
+  padding: 1rem 1.5rem;
+  border-radius: 20px;
+  max-width: 60%;
+  word-wrap: break-word;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  font-size: 1rem;
+  opacity: 0;
+  animation: fadeSlideUp 0.4s ease forwards;
+}
+  
+
+.response-scroll-wrapper {
+  height: calc(100vh - 150px); /* Adjust depending on your header and input height */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 2rem;
+  scroll-behavior: smooth;
+}

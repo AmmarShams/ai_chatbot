@@ -17,7 +17,7 @@ function Form({ userData, setMessages }: Props) {
     setPrompt("");
     try {
       const sendRes = await axios.post(
-        "https://n8n-production-9806.up.railway.app/webhook-test/47fc246e-44d7-4833-a429-7b19f8838a5b",
+        "https://ammarshams.app.n8n.cloud/webhook/47fc246e-44d7-4833-a429-7b19f8838a5b",
         { userData, prompt }
       );
       const promptResponse = sendRes.data.response;

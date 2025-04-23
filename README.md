@@ -88,7 +88,6 @@ Follow these steps to get the Smart Product Bot up and running on your local mac
 ## ⚠️ Known Limitations
 
 * **Scraping Limited to Walmart:** The current implementation only scrapes product data from Walmart via the SerpAPI.
-* **Mocked Email Alerts:** Email alerts are currently mocked. For a production-ready application, integration with email services like [SendGrid](https://sendgrid.com/) or [AWS SES](https://aws.amazon.com/ses/) is required.
 * **Product Refresh Schedule:** The frequency of product data updates depends on the scheduling configured within the n8n workflows.
 * **Frontend Optimization:** The frontend may require further optimization for performance and user experience in a production environment.
 

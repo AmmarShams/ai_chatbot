@@ -1,0 +1,559 @@
+{
+  "name": "LLM Flow",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const prompt = $input.first().json.body.prompt;\nconst name = $input.first().json.body.userData.name\nconst email = $input.first().json.body.userData.email\n\nconst priceRegex = /\\b(under|for)\\s*(\\d{2,4})(?:\\.\\d{1,2})?\\b/i;\nlet priceMax = null;\nlet priceMatch = prompt.match(priceRegex);\n\n\nif (priceMatch) {\n  priceMax = parseFloat(priceMatch[2]);\n}\n\n\nif (!priceMax) {\n \n  priceMatch = prompt.match(/(?:\\s|^|\\b)(\\d{3,})(?:\\.\\d{1,2})?\\b(?![\\w\\s])/); // Prevent matching model numbers like 10\n  if (priceMatch) {\n    priceMax = parseFloat(priceMatch[1]);\n  }\n}\n\n\nlet brands = [\n  \"Iphone\", \"Samsung\", \"Motorola\", \"Google\", \"OnePlus\", \"TCL\", \"Nokia\", \n  \"AT&T\", \"Cricket Wireless\", \"Boost Mobile\", \"TracFone\", \"Alcatel\", \n  \"Blu\", \"LG\"\n];\n\n\n\nlet brandFound = prompt ? brands.find(brand => prompt.toLowerCase().includes(brand.toLowerCase())) : '';\n\n\nreturn [\n  {\n    json: {\n      originalPrompt: prompt,\n      priceMax: priceMax || null,\n      brand: brandFound || null,\n      name: name || null,\n      email: email || null,\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2900,
+        200
+      ],
+      "id": "ce426916-20ea-49ca-996e-cb6210caf33e",
+      "name": "Code",
+      "notesInFlow": true,
+      "onError": "continueRegularOutput",
+      "notes": "Extracts the prompt and filters"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "products",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "price",
+              "condition": "lte",
+              "keyValue": "={{ $json.priceMax }}"
+            },
+            {
+              "keyName": "product_type",
+              "condition": "eq",
+              "keyValue": "={{ $json.brand.toLowerCase() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2360,
+        180
+      ],
+      "id": "0e8fd98c-e5f3-4351-9b69-20e1380e7357",
+      "name": "Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "LwxPV5alORGpQrPP",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "47fc246e-44d7-4833-a429-7b19f8838a5b",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -3100,
+        200
+      ],
+      "id": "ca1cc1d1-552a-4159-81d6-cd2936891fb3",
+      "name": "Webhook",
+      "webhookId": "47fc246e-44d7-4833-a429-7b19f8838a5b",
+      "notesInFlow": true,
+      "notes": "Listens for POST request "
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are assisting a user in finding a smartphone based on their needs and preferences.\n\nYou will receive:\n\nA list of smartphones currently available from Walmart\n\nThe user's original prompt\n\nOptional filter preferences (brand and/or maximum price)\n\nInstructions:\nUnderstand the user’s request:\nIf the user is looking for a specific phone (e.g., \"Samsung Note 10 under $300\"), use the details in the prompt and any filters provided to recommend suitable phones.\n\nIf the user asks a general or comparative question (e.g., “Samsung vs iPhone?”), respond with a helpful comparison. Only reference phones from the provided list if relevant.\n\nRecommend the best matching phones:\nUse the user’s prompt and any filters (if provided) to recommend the best phones. If no phones match the filters, suggest alternatives and inform the user they will be notified by email when a suitable phone becomes available.\n\nFor each recommended phone:\nExplain key features clearly:\nFocus on important aspects like camera, battery life, display, and storage.\n\nKeep the explanation concise and professional:\nAvoid greetings, filler text, or unnecessary details.\n\nData Provided:\n\nUser Prompt: {{ $('Code').item.json.originalPrompt }}\n\nFilters:\n\nBrand: {{ $('Code').item.json.brand }}\n\nMax Price: {{ $('Code').item.json.priceMax }}\n\nAvailable Product List:\nEach product includes: name, price, out_of_stock, rating, product_link, and product_type\n{{ $json.data }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        -1720,
+        180
+      ],
+      "id": "81dda0d5-bd49-4b7e-abca-83ca18226f3d",
+      "name": "Basic LLM Chain",
+      "notesInFlow": true,
+      "onError": "continueRegularOutput",
+      "notes": "Answers prompt"
+    },
+    {
+      "parameters": {
+        "model": "mistralai/mistral-7b-instruct:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -1720,
+        360
+      ],
+      "id": "eeb9da56-2008-4426-aa8b-be5bd5e92d06",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "YXl2vlgvksjlBIEU",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const answer = $('Basic LLM Chain').first().json.text;\n\ntry {\n  const cleaned = answer\n    .replace(/[\\u4e00-\\u9fa5]+/g, '')\n    .replace(/[^\\x00-\\x7F]+/g, '')\n    .replace(/\\*\\*(.*?)\\*\\*/g, '$1')\n    .replace(/(\\d+)\\.\\s+/g, '\\n\\n$1. ')\n    .replace(/ - /g, '\\n  • ')\n    .replace(/\\*/g, '')\n    .replace(/\\s{2,}/g, ' ')\n    .replace(/([^\\n])(\\d+\\.\\s)/g, '$1\\n\\n$2')\n    .replace(/Note:/g, '\\n\\n🔍 Note:')\n    .replace(/([A-Za-z]), ([A-Za-z])/g, '$1, $2')\n    .replace(/(?<=\\n)\\s+/g, '')\n    .replace(/\\n{2,}/g, '\\n\\n')\n    .trim();\n\n  return [{ json: { response: cleaned } }];\n} catch (err) {\n  const response = \"We're encountering issues right now. Please try again later.\";\n  return [{ json: { response } }];\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        200
+      ],
+      "id": "4eb07c0e-b2ee-4b48-9122-ae4599777ae4",
+      "name": "Code1",
+      "notesInFlow": true,
+      "notes": "Polishes LLM response"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7b8c3840-24f4-4a4f-ae4d-fc96507f8a1a",
+              "leftValue": "={{ $('Code2').item.json.noResults }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1080,
+        180
+      ],
+      "id": "a9ceadb2-323f-4792-ac9b-8b6d2afdff3f",
+      "name": "If",
+      "notesInFlow": true,
+      "onError": "continueRegularOutput",
+      "notes": "Match found or not"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json.text;\n\nconst noRecommendationPatterns = [\n  /no matching products/i,\n  /not found/i,\n  /sorry.*(don't|do not).*have/i,\n  /unfortunately.*no/i,\n  /no products.*available/i,\n  /we couldn't find/i,\n  /no results/i,\n  /nothing.*found/i,\n  /didn’t find/i,\n  /could not find/i,\n  /no specific .* match(es)?/i,\n  /\\bnot available on\\b/i,\n  /no listings/i,\n  /unable to find/i,\n  /no.*models/i,\n  /not found in inventory/i,  \n  /not yet released/i,        \n  /latest released models shown/i,\n  /all listed models are in stock/i\n];\n\nconst noResults = noRecommendationPatterns.some(pattern => pattern.test(response));\n\nreturn [{ json: { noResults, response } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1380,
+        180
+      ],
+      "id": "2e7e7862-4d63-4eae-ab25-0c2346a4b83a",
+      "name": "Code2",
+      "notesInFlow": true,
+      "onError": "continueRegularOutput",
+      "notes": "Checking if a match was found "
+    },
+    {
+      "parameters": {
+        "tableId": "product_alerts",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $('Code').item.json.name }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $('Code').item.json.email }}"
+            },
+            {
+              "fieldId": "product_name",
+              "fieldValue": "={{ $json.product_name }}"
+            },
+            {
+              "fieldId": "price_max",
+              "fieldValue": "={{ $json.price_max }}"
+            },
+            {
+              "fieldId": "product_type",
+              "fieldValue": "={{ $json.product_brand.toLowerCase() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8881654b-7939-4808-abe7-b63945528be0",
+      "name": "Supabase1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "LwxPV5alORGpQrPP",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prompt = $('Code').first().json.originalPrompt;\nconst brand = $('Code').first().json.brand;\nconst priceMax = $('Code').first().json.priceMax;\n\nconst lowerPrompt = prompt.toLowerCase();\nconst lowerBrand = brand.toLowerCase();\nconst priceStr = priceMax ? priceMax.toString() : null;\n\nlet productName = '';\nconst brandIndex = lowerPrompt.indexOf(lowerBrand);\n\nif (brandIndex !== -1) {\n  let afterBrand = lowerPrompt.slice(brandIndex + lowerBrand.length);\n\n  if (priceStr) {\n    const priceIndex = afterBrand.indexOf(priceStr);\n    if (priceIndex !== -1) {\n      afterBrand = afterBrand.slice(0, priceIndex);\n    }\n  }\n\n  const unwantedWords = ['i', 'want', 'need', 'to', 'a', 'an', 'for', 'under', 'with', 'phone', 'looking', 'buy','that','has','storage','of'];\n  const words = afterBrand\n    .split(/\\s+/)\n    .map(word => word.replace(/[^\\w]/g, '')) \n    .filter(word => word && !unwantedWords.includes(word));\n\n  productName = `${brand} ${words.join(' ')}`.trim();\n}\n\nreturn [\n  {\n    json: {\n      product_name: productName || null,\n      product_brand: brand || null,\n      price_max: priceMax || null,\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -760,
+        20
+      ],
+      "id": "99dba675-9108-431d-a8c9-dba024dd14fa",
+      "name": "Code3",
+      "notesInFlow": true,
+      "onError": "continueRegularOutput",
+      "notes": "Extracting name and filters"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -2040,
+        180
+      ],
+      "id": "d8c4da33-db1b-4eeb-b07c-7b985caf9804",
+      "name": "Aggregate",
+      "notesInFlow": true,
+      "notes": "Aggregates the data into a list"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"response\": {{ $json.response.toJsonString() }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        340,
+        200
+      ],
+      "id": "764b2639-e317-4053-833e-0e6ab092ec50",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ca9ca16f-2630-4e97-b26c-003df0cb40a8",
+              "leftValue": "={{ $json.priceMax }}",
+              "rightValue": null,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "e75b9771-d65d-43c3-a165-f83f049dad36",
+              "leftValue": "={{ $json.brand }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2680,
+        200
+      ],
+      "id": "6808b20c-b94f-4ce2-ab48-ffdfb063cb37",
+      "name": "If1",
+      "notesInFlow": true,
+      "notes": "Price filter exist ?"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "products",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2360,
+        360
+      ],
+      "id": "5d58cddd-6e58-431f-a439-e9d60d0eb787",
+      "name": "Supabase2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "LwxPV5alORGpQrPP",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "584405b9-1b13-4271-83dd-d7cc55999918",
+              "leftValue": "={{ $json.product_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -420,
+        20
+      ],
+      "id": "43020c26-41a8-4b53-b8ec-5b5cc61bf469",
+      "name": "If2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Supabase1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ac240852-59be-433b-bfa8-96419691c41e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "510677ebfc99801f30925fa5bfc4a201572cc3b5ceb2a341d6c2821c847beca1"
+  },
+  "id": "eN8CvNOuj5QnLbu3",
+  "tags": []
+}

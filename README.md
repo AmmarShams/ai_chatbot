@@ -68,9 +68,9 @@ Follow these detailed steps to get the Smart Product Bot running on your local m
     * Integrate these credentials into the corresponding Supabase nodes within your n8n workflows.
 
 5.  **Set Up the React Frontend:**
-    * Navigate to the `client` directory:
+    * Navigate to the project directory:
         ```bash
-        cd client
+        cd frontend
         ```
     * Install the necessary project dependencies:
         ```bash

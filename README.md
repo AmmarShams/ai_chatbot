@@ -119,4 +119,4 @@ Explore the capabilities of the AI chatbot with these example queries:
 * "Can you provide information on the latest iPhone releases?"
 * "Compare the features and specifications of the Samsung Galaxy S21 and OnePlus 9."
 * "Is the iPhone 13 currently in stock?"
-* "Find me an iPhone with a price point below $1000."
+* "Find me an iPhone with a price under $1000."

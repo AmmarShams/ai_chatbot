@@ -85,6 +85,7 @@ a {
     background-color: #e0f7fa;
     align-self: flex-start;
     border-top-left-radius: 0;
+    padding: 20px;
   }
   
   .ai-message {
